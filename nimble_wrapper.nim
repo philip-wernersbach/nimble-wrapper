@@ -37,26 +37,6 @@ import sequtils
 const possibleNimbleDirs = [".nimble", ".babel"]
 const possibleNimbleExes = ["nimble", "babel"]
 
-### FROM http://gist.github.com/Araq/1657152
-proc allocCStringArray*(a: openArray[string]): cstringArray =
-    ## creates a NULL terminated cstringArray from `a`. The result has to
-    ## be freed with `deallocCStringArray` after it's not needed anymore.
-    result = cast[cstringArray](alloc0((a.len+1) * sizeof(cstring)))
-    for i in 0 .. a.high:
-        # XXX get rid of this string copy here:
-        var x = a[i]
-        result[i] = cast[cstring](alloc0(x.len+1))
-        copyMem(result[i], addr(x[0]), x.len)
-
-proc deallocCStringArray*(a: cstringArray) =
-    ## frees a NULL terminated cstringArray.
-    var i = 0
-    while a[i] != nil:
-        dealloc(a[i])
-        inc(i)
-    dealloc(a)
-### END http://gist.github.com/Araq/1657152
-
 proc nimbleinstalledAt(base: string): string =
     for nimbleDir in possibleNimbleDirs:
         for nimbleExe in possibleNimbleExes:
