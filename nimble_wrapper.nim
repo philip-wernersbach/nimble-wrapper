@@ -34,7 +34,8 @@ import osproc
 import posix
 import sequtils
 
-const nimbleBin = "bin"/"nimble"
+const possibleNimbleDirs = [".nimble", ".babel"]
+const possibleNimbleExes = ["nimble", "babel"]
 
 ### FROM http://gist.github.com/Araq/1657152
 proc allocCStringArray*(a: openArray[string]): cstringArray =
@@ -57,12 +58,19 @@ proc deallocCStringArray*(a: cstringArray) =
 ### END http://gist.github.com/Araq/1657152
 
 proc nimbleinstalledAt(base: string): string =
-    if existsFile(base/".nimble"/nimbleBin):
-        return base/".nimble"/nimbleBin
-    elif existsFile(base/".babel"/nimbleBin):
-        return base/".babel"/nimbleBin
-    else:
-        return ""
+    for nimbleDir in possibleNimbleDirs:
+        for nimbleExe in possibleNimbleExes:
+            if existsFile(base/nimbleDir/"bin"/nimbleExe):
+                return base/nimbleDir/"bin"/nimbleExe
+
+    return ""
+
+proc systemNimbleInstalledAt(base: string): string =
+    for nimbleExe in possibleNimbleExes:
+            if existsFile(base/"src"/nimbleExe):
+                return base/"src"/nimbleExe
+
+    raise newException(ESystem, "System nimble not installed!")
 
 if existsEnv("HOME"):
     var nimbleSetupStatus = 0
@@ -76,7 +84,7 @@ if existsEnv("HOME"):
         setCurrentDir(getAppDir()/".."/"nimble")
         stderr.writeln("===== nimble-wrapper: Installing nimble =====")
 
-        let installProcess = startProcess("."/"src"/"nimble", args = @["install"], options = {poParentStreams})
+        let installProcess = startProcess(systemNimbleInstalledAt("."), args = @["install"], options = {poParentStreams})
         nimbleSetupStatus = installProcess.waitForExit
 
         stderr.writeln("===== nimble-wrapper: Finished installing nimble =====\n")

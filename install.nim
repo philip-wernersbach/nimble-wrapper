@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import osproc
 
+var nimbleExe: string
 var prefix: string
 
 if paramCount() >= 1:
@@ -64,13 +65,17 @@ echo "Installing nimble_wrapper.\n"
 shExec("nimrod", @["c", "-d:release", "nimble_wrapper"])
 
 mkdir_force prefix/"bin"
-cpfile_a("nimble-wrapper", prefix/"bin"/"nimble")
+if not existsDir(prefix/"nimble"):
+    shExec("git", @["clone", "git://github.com/nimrod-code/nimble.git", prefix/"nimble"])
 
-cd prefix
-if not existsDir("nimble"):
-    shExec("git", @["clone", "git://github.com/nimrod-code/nimble.git", "nimble"])
+if existsFile(prefix/"nimble"/"src"/"nimble.nim"):
+    nimbleExe = "nimble"
+else:
+    nimbleExe = "babel"
 
-cd "nimble"
-shExec("nimrod", @["c", "-d:release", "src/nimble"])
+cpfile_a("nimble-wrapper", prefix/"bin"/nimbleExe)
 
-echo "\nnimble-wrapper installed into \"" & prefix & "\", binary is at \"" & prefix & "/bin/nimble\"."
+cd prefix/"nimble"
+shExec("nimrod", @["c", "-d:release", "src"/nimbleExe])
+
+echo "\nnimble-wrapper installed into \"" & prefix & "\", binary is at \"" & prefix & "/bin/" & nimbleExe & "\"."
